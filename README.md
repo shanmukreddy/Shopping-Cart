@@ -141,3 +141,41 @@ val colset1 = new java.util.HashSet[String]
 //    ndf.show()
 //  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+var cols2=Seq[sql.Column]() //Cols: "::" size=1
+    val colset2 = new mutable.HashSet[String]
+    val l = Array()
+
+    df.columns.foreach(row => {
+      df_csv.collect().foreach(row1 => {
+        if (row == row1.getAs[String](1)) {
+          colset2.add(row)
+          val cc = when(df.col(row) === row1.getAs[String](3), row1.getAs[String](4)).otherwise(lit(row1.getAs[String](2))).as(row1.getAs[String](0))
+          cols2 = cols2 :+ cc
+        }
+
+      })
+    })
+
+    df.columns.foreach(colVal => {
+      if (!colset2.contains(colVal)){
+        val cc = when(df.col(colVal).isNotNull,df.col(colVal)).otherwise(null).as(colVal)
+        cols2 = cols2 :+ cc}
+    })
+
+
+    df.select(cols2: _*).show()
