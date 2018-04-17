@@ -23,3 +23,121 @@ val dropColNames = Seq("col1")
     val featsdf = df.select(featCols: _*)
     featsdf.show()
 
+
+
+
+object Main {
+  def main(args: Array[String]): Unit = {
+    print("Hi")
+    val spark = SparkSession.builder().master("local").appName("ParquetAppendMode").getOrCreate()
+
+    import spark.sqlContext.implicits._
+
+    //create a simple dataframe with one column
+
+    val df_csv = spark.sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "false")
+      .load("src/main/scala/file.csv")
+    //df_csv.show()
+    val df = spark.sparkContext.parallelize(List((1, 2, 3), (4, 5, 6), (7, 8, 9))).toDF("abc", "bcd", "cde")
+    df.registerTempTable("TBL")
+    //df.show()
+
+    var cols2 = Seq[Column]()
+    val l = Array()
+
+//    df.columns.foreach(row => {
+//      df_csv.collect().foreach(row1 => {
+//        if (row == row1.getAs[String](1)) {
+//          //val df2=df.sqlContext.sql("select case when lower (" + row1.getAs[String](1) + ") in ( '" + row1.getAs[String](3) + "' ) then " + row1.getAs[Int](4) + " else " + row1.getAs[Int](2) + " end as " + row1.getAs[String](0) + " from TBL ")}
+//          val cc:Column =  df.col(row1.getAs[String](1)).when(df.col(row1.getAs[String](1)).isin(row1.getAs[String](3)), lit(row1.getAs[String](1)))
+//          //.otherwise(lit(row1.getAs[String](2)))
+//          //val cc:Column =  df.select(when(df.col(row1.getAs[String](1)).equals(row1.getAs[String](3)), lit(row1.getAs[String](1)))
+//          //.otherwise(lit(row1.getAs[String](2))))
+//
+//          //people.select(when(people("gender") === "male", 0).when(people("gender") === "female", 1).otherwise(2))
+//
+//          //val cc:Column =  df.select(when(row1.getAs[String](3) === row1.getAs[String](3),row1.getAs[Int](1)).otherwise(lit(row1.getAs[String](2))))
+//          //df.select(row1.getAs[String](3))
+//          //cols2 = cols2 :+ cc
+//          //println("col size "+cols2.size)
+//
+//        }
+//          )
+//        else{
+//
+//        }
+//      })
+//
+//    })
+val colset1 = new java.util.HashSet[String]
+    val colset2 = new mutable.HashSet[String]
+//    df.columns.foreach(row => {
+//      df_csv.collect().foreach(row1 =>
+//        df.withColumn(
+//          row,
+//          when(col(row) === lit(row1.getAs[String](3)), col(row1.getAs[String](1))).otherwise(col(row1.getAs[String](2)))
+//        )
+//      })
+//
+//    })
+
+
+        val df2=df.columns.foreach(colu => {
+          df_csv.collect().foreach(row => {
+            if (colu == row.getAs[String](1)) {
+              colset2.add(colu)
+              df.withColumn(row.getAs[String](0),when(col(colu) === row.getAs[String](3), col(row.getAs[String](4)).toString()).otherwise(col(row.getAs[String](2)).toString()))
+              //cols2 = cols2 :+ cc
+              //println("col size "+cols2.size)
+              //caseQyery.append("case when lower (" + row.getAs[String](1) + ") in ( '" + row.getAs[String](3) + "' ) then " + row.getAs[Int](4) + " else " + row.getAs[Int](2) + " end as " + row.getAs[String](0) + ",")
+            }
+          })
+        })
+        df.columns.foreach(colVal => {
+          if (!colset2.contains(colVal))
+           df.select(colVal).as(colVal)
+        })
+
+
+//println(cols2.size)
+//df.select(cols2:_*).show()
+
+
+  }
+//  def check() {
+//    print("Hi")
+//    val spark = SparkSession.builder().master("local").appName("ParquetAppendMode").getOrCreate()
+//
+//
+//
+//    //create a simple dataframe with one column
+//
+//    val df_csv = spark.sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "false")
+//      .load("src/main/scala/file.csv")
+//    df_csv.printSchema()
+//    val df = spark.sparkContext.parallelize(List((1, 2, 3), (4, 5, 6), (7, 8, 9))).toDF("abc", "bcd", "cde")
+//    df.registerTempTable("TBL")
+//    //df.columns.foreach(println)
+//    //def manOf[T: Manifest](t: T): Manifest[T] = manifest[T]
+//    print("Final result")
+//    val caseQyery = new StringBuilder
+//    val caseQyery1 = new StringBuilder
+//    val caseQyery2 = new StringBuilder
+//    val colset1 = new java.util.HashSet[String]
+//    val colset2 = new mutable.HashSet[String]
+//    df.columns.foreach(col => {
+//      df_csv.collect().foreach(row => {
+//        if (col == row.getAs[String](1)) {
+//          colset2.add(col)
+//          caseQyery.append("case when lower (" + row.getAs[String](1) + ") in ( '" + row.getAs[String](3) + "' ) then " + row.getAs[Int](4) + " else " + row.getAs[Int](2) + " end as " + row.getAs[String](0) + ",")
+//        }
+//      })
+//    })
+//    df.columns.foreach(x => {
+//      if (!colset2.contains(x))
+//        caseQyery.append(x + " as " + x + ",")
+//    })
+//    val ndf = df.sqlContext.sql("select " + caseQyery.toString().stripSuffix(",") + " from TBL")
+//    ndf.show()
+//  }
+}
